@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galeri — Dafynna</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+:root {
+  --lavender:      #c4b5e8;
+  --lavender-soft: #e8e0f5;
+  --lavender-deep: #7c5cbf;
+  --plum:          #4a2c6e;
+  --gold:          #d4b896;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #0e0718;
+  color: #fff;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ── BG ── */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(124,92,191,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(74,44,110,0.15) 0%, transparent 60%),
+    linear-gradient(180deg, #0e0718 0%, #150d28 50%, #0e0718 100%);
+}
+
+/* ── LOVE RAIN ── */
+#love-canvas {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 1; opacity: 0.5;
+}
+
+/* ══════════════════════════════
+   POPUP
+══════════════════════════════ */
+#popup-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(10,4,20,0.88);
+  backdrop-filter: blur(18px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 1; transition: opacity .7s ease;
+}
+#popup-overlay.fade-out { opacity: 0; pointer-events: none; }
+
+#popup-box {
+  position: relative;
+  background: linear-gradient(145deg, rgba(124,92,191,0.18), rgba(74,44,110,0.25));
+  border: 1px solid rgba(196,181,232,0.25);
+  border-radius: 28px;
+  padding: 48px 44px 40px;
+  max-width: 420px; width: 90%;
+  text-align: center;
+  box-shadow: 0 40px 100px rgba(74,44,110,0.6), 0 0 0 1px rgba(196,181,232,0.08);
+  animation: popIn .55s cubic-bezier(.23,1,.32,1) both;
+}
+@keyframes popIn {
+  from { transform: scale(.82) translateY(30px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);      opacity: 1; }
+}
+
+.popup-loves {
+  font-size: 2rem;
+  line-height: 1.6;
+  letter-spacing: .1em;
+  margin-bottom: 16px;
+  animation: floatLoves 3s ease-in-out infinite;
+}
+@keyframes floatLoves {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+.popup-title {
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(2.2rem, 7vw, 3.2rem);
+  color: #fff;
+  text-shadow: 0 0 60px rgba(196,181,232,0.5);
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+.popup-title span { color: var(--lavender); }
+
+.popup-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem; font-style: italic; font-weight: 300;
+  color: rgba(196,181,232,0.65);
+  margin-bottom: 28px;
+  line-height: 1.7;
+}
+
+.pw-wrap {
+  position: relative;
+  margin-bottom: 10px;
+}
+.pw-input {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(196,181,232,0.25);
+  border-radius: 100px;
+  padding: 13px 48px 13px 22px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .95rem; color: #fff;
+  outline: none;
+  transition: border-color .25s, background .25s;
+  letter-spacing: .1em;
+}
+.pw-input::placeholder { color: rgba(196,181,232,0.35); letter-spacing: 0; }
+.pw-input:focus { border-color: rgba(196,181,232,0.55); background: rgba(255,255,255,0.09); }
+.pw-input.shake {
+  animation: shake .4s ease;
+  border-color: rgba(255,100,130,0.6);
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-8px); }
+  40%      { transform: translateX(8px); }
+  60%      { transform: translateX(-5px); }
+  80%      { transform: translateX(5px); }
+}
+.pw-eye {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; font-size: 1rem;
+  opacity: .5; transition: opacity .2s;
+}
+.pw-eye:hover { opacity: .9; }
+.pw-error {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: .9rem;
+  color: rgba(255,120,140,0.8);
+  margin-bottom: 16px;
+  min-height: 1.2em;
+  opacity: 0; transition: opacity .3s;
+}
+.pw-error.show { opacity: 1; }
+
+.popup-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: linear-gradient(135deg, var(--lavender-deep), var(--plum));
+  color: #fff; border: none; border-radius: 100px;
+  padding: 13px 36px; font-size: .85rem;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500; letter-spacing: .12em; text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(124,92,191,0.5);
+  transition: transform .25s, box-shadow .25s;
+}
+.popup-btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 14px 40px rgba(124,92,191,0.65); }
+
+.popup-loves-bottom {
+  margin-top: 22px;
+  font-size: 1.2rem; letter-spacing: .15em;
+  color: rgba(196,181,232,0.3);
+}
+
+/* ── BACK ── */
+.back-btn {
+  position: fixed; top: 24px; left: 28px; z-index: 200;
+  display: flex; align-items: center; gap: 7px;
+  font-size: .7rem; font-weight: 500; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--lavender); text-decoration: none;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(196,181,232,0.18);
+  backdrop-filter: blur(12px);
+  border-radius: 100px; padding: 9px 18px;
+  transition: background .3s, color .3s;
+}
+.back-btn:hover { background: rgba(196,181,232,0.12); color: #fff; }
+
+/* ── HEADER ── */
+.header {
+  position: relative; z-index: 10;
+  width: 100%;
+  text-align: center;
+  padding: 80px 20px 16px;
+  box-sizing: border-box;
+}
+.header-eyebrow {
+  font-size: .68rem; letter-spacing: .35em; text-transform: uppercase;
+  color: rgba(196,181,232,0.45); margin-bottom: 12px;
+}
+.header-title {
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(3rem, 7vw, 5rem);
+  color: #fff;
+  text-shadow: 0 0 80px rgba(196,181,232,0.35);
+  line-height: 1.1;
+}
+.header-title span { color: var(--lavender); }
+.header-sub {
+  margin-top: 10px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: .95rem; font-style: italic; font-weight: 300;
+  color: rgba(196,181,232,0.45);
+}
+
+/* ── HERO PHOTO ── */
+.hero-section {
+  position: relative; z-index: 10;
+  width: 100%;
+  display: flex; justify-content: center; align-items: center;
+  margin-top: 36px; padding: 0 20px;
+  box-sizing: border-box;
+}
+.hero-frame {
+  position: relative;
+  width: 280px;
+}
+.hero-glow {
+  position: absolute; inset: -30px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(124,92,191,0.35) 0%, transparent 70%);
+  filter: blur(20px);
+  animation: heroGlow 4s ease-in-out infinite;
+}
+@keyframes heroGlow {
+  0%,100% { opacity: .7; transform: scale(1); }
+  50%      { opacity: 1;  transform: scale(1.06); }
+}
+.hero-card {
+  position: relative;
+  width: 280px; height: 380px;
+  border-radius: 28px; overflow: hidden;
+  border: 1.5px solid rgba(196,181,232,0.28);
+  box-shadow: 0 30px 80px rgba(74,44,110,0.65),
+              0 0 0 1px rgba(196,181,232,0.06),
+              inset 0 1px 0 rgba(255,255,255,0.07);
+  background: linear-gradient(145deg, rgba(196,181,232,0.07), rgba(74,44,110,0.2));
+}
+.hero-card img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.hero-ph {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+}
+.hero-ph .ph-icon { font-size: 3rem; opacity: .4; }
+.hero-ph .ph-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem; font-style: italic;
+  color: rgba(196,181,232,0.35); text-align: center; padding: 0 20px;
+}
+.hero-footer {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 20px 22px 18px;
+  background: linear-gradient(to top, rgba(14,7,24,0.95) 0%, transparent 100%);
+}
+.hero-caption {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem; font-style: italic;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 4px;
+}
+.hero-date {
+  font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
+  color: rgba(196,181,232,0.5);
+}
+
+/* ── GRID ── */
+.grid-section {
+  position: relative; z-index: 10;
+  max-width: 1160px; margin: 64px auto 0;
+  padding: 0 28px 100px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.grid-label {
+  text-align: center; margin-bottom: 32px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem; font-style: italic; font-weight: 300;
+  color: rgba(196,181,232,0.35); letter-spacing: .08em;
+}
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+  justify-content: center;
+}
+.g-item {
+  position: relative; border-radius: 18px; overflow: hidden;
+  aspect-ratio: 3/4; cursor: pointer;
+  background: linear-gradient(145deg, rgba(196,181,232,0.06), rgba(74,44,110,0.14));
+  border: 1px solid rgba(196,181,232,0.1);
+  transition: transform .38s cubic-bezier(.23,1,.32,1), box-shadow .38s ease, border-color .3s;
+}
+.g-item.landscape {
+  aspect-ratio: 3/2;
+  grid-column: span 2;
+}
+.g-item:hover {
+  transform: translateY(-8px) scale(1.025);
+  box-shadow: 0 30px 65px rgba(74,44,110,0.55);
+  border-color: rgba(196,181,232,0.28);
+}
+.g-item img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform .5s ease;
+}
+.g-item:hover img { transform: scale(1.07); }
+.g-item-ph {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px;
+  color: rgba(196,181,232,0.22);
+}
+.g-item-ph .gph-icon { font-size: 2rem; }
+.g-item-ph .gph-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: .78rem; font-style: italic;
+  text-align: center; padding: 0 12px;
+}
+.g-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(14,7,24,0.9) 0%, transparent 55%);
+  display: flex; flex-direction: column;
+  justify-content: flex-end; padding: 16px;
+  opacity: 0; transition: opacity .35s ease;
+}
+.g-item:hover .g-overlay { opacity: 1; }
+.g-overlay-caption {
+  font-family: 'Great Vibes', cursive;
+  font-size: 1.3rem; color: #fff;
+}
+.g-overlay-date {
+  font-size: .6rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--lavender); opacity: .7; margin-top: 3px;
+}
+
+/* ── FOOTER ── */
+.page-footer {
+  position: relative; z-index: 10;
+  text-align: center; padding: 0 20px 60px;
+}
+.footer-ornament {
+  font-family: 'Great Vibes', cursive;
+  font-size: 2.5rem; color: rgba(196,181,232,0.18); margin-bottom: 8px;
+}
+.footer-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: .88rem; font-style: italic; font-weight: 300;
+  color: rgba(196,181,232,0.3);
+}
+
+/* ── MUSIC PLAYER ── */
+#music-btn {
+  position: fixed; bottom: 28px; right: 28px; z-index: 300;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(196,181,232,0.12);
+  border: 1px solid rgba(196,181,232,0.3);
+  color: var(--lavender); font-size: 1.2rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; backdrop-filter: blur(12px);
+  transition: all .3s; box-shadow: 0 8px 32px rgba(124,92,191,0.3);
+}
+#music-btn:hover { background: rgba(196,181,232,0.22); transform: scale(1.1); }
+#music-btn.playing { background: rgba(124,92,191,0.35); border-color: var(--lavender); }
+.music-ripple {
+  position: absolute; inset: -4px; border-radius: 50%;
+  border: 1px solid rgba(196,181,232,0.3);
+  animation: musicPulse 1.8s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes musicPulse {
+  0%   { transform: scale(1); opacity: .7; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+#music-label {
+  position: fixed; bottom: 34px; right: 88px; z-index: 300;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: .82rem; font-style: italic;
+  color: rgba(196,181,232,0.5);
+  pointer-events: none;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .hero-frame { width: 220px; }
+  .hero-card  { width: 220px; height: 298px; }
+  .photo-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  #popup-box  { padding: 36px 24px 28px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<canvas id="love-canvas"></canvas>
+
+<!-- POPUP -->
+<div id="popup-overlay">
+  <div id="popup-box">
+    <div class="popup-loves">🔐 💜 🩷 ❤️ 🩷 💜 🔐</div>
+    <h2 class="popup-title">Galeri <span>Dafynna</span></h2>
+    <p class="popup-sub">masukkan password dulu ya 🌸</p>
+    <div class="pw-wrap">
+      <input type="password" id="pwInput" class="pw-input" placeholder="password..." maxlength="32" />
+      <button class="pw-eye" id="pwEye" type="button">👁</button>
+    </div>
+    <div class="pw-error" id="pwError">password salah, coba lagi 💔</div>
+    <button class="popup-btn" id="popupEnter">✨ &nbsp; Masuk &nbsp; ✨</button>
+  </div>
+</div>
+
+<!-- MUSIK -->
+<audio id="bgMusic" loop>
+  <source src="ssstik.io_1778934925501.mp3" type="audio/mpeg">
+</audio>
+<span id="music-label">♪ play musik</span>
+<button id="music-btn" title="Play / Pause">▶</button>
+
+<a href="index.html" class="back-btn">← Kembali</a>
+
+<div class="header">
+  <p class="header-eyebrow">06 — Galeri </p>
+  <h1 class="header-title">Foto-foto <span>KAMU</span></h1>
+  <p class="header-sub">baru aku masukin sedikit fotonya</p>
+</div>
+
+<!-- HERO FOTO UTAMA -->
+<div class="hero-section">
+  <div class="hero-frame">
+    <div class="hero-glow"></div>
+    <div class="hero-card" id="heroCard"></div>
+  </div>
+</div>
+
+<!-- GRID SEMUA FOTO -->
+<div class="grid-section">
+  <p class="grid-label">✦ &nbsp; semua momen &nbsp; ✦</p>
+  <div class="photo-grid" id="photoGrid"></div>
+</div>
+
+<div class="page-footer">
+  <div class="footer-ornament">Dafynna</div>
+  <p class="footer-text">cantikk banget gilaaa</p>
+</div>
+
+<script>
+/* ============================================================
+   DATA FOTO — edit di sini untuk nambahin foto
+   { src: 'path/foto.jpg', caption: '...', date: 'YYYY-MM-DD' }
+   src null = placeholder
+   ============================================================ */
+const PHOTOS = [
+  { src: 'pacar6.jpg', caption: 'Foto Utama',       date: '2025-01-15' },
+  { src: 'fisrt.jpeg', caption: 'first pap',      date: '2026-11-20' },
+  { src: 'pacar21 (3).jpg', caption: 'rumah nenek',           date: '2025-12-21', landscape: true },
+  { src: 'pacar9.jpg', caption: 'pap pas kamu maen',    date: '2025-1-7' },
+  { src: 'pacar21 (2).jpg', caption: 'rumah nenek',    date: '2025-12-21', landscape: true },
+  { src: 'pacar7.jpg', caption: 'mirror',     date: '2026-05-10' },
+  { src: 'pacar11.jpg', caption: 'always cantik',      date: '2026-02-10' },
+  { src: 'pacar16.jpg', caption: 'selfie',    date: '2026-03-29' },
+  { src: 'paacar15.jpg', caption: 'idul fitri',  date: '2026-03-21' },
+  { src: 'pacar10.jpg', caption: 'ragunan',    date: '2026-01-22', landscape: true },
+];
+/* ============================================================ */
+
+function fmtDate(s) {
+  if (!s) return '';
+  return new Date(s + 'T00:00:00').toLocaleDateString('id-ID', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  });
+}
+
+/* ── HERO (PHOTOS[0] = foto utama) ── */
+const heroCard = document.getElementById('heroCard');
+const hero = PHOTOS[0];
+if (hero.src) {
+  heroCard.innerHTML = `<img src="${hero.src}" alt="${hero.caption}">
+    <div class="hero-footer">
+      <div class="hero-caption">${hero.caption}</div>
+      <div class="hero-date">${fmtDate(hero.date)}</div>
+    </div>`;
+} else {
+  heroCard.innerHTML = `<div class="hero-ph">
+    <div class="ph-icon">📸</div>
+    <div class="ph-label">${hero.caption}</div>
+  </div>
+  <div class="hero-footer">
+    <div class="hero-caption">${hero.caption}</div>
+    <div class="hero-date">${fmtDate(hero.date)}</div>
+  </div>`;
+}
+
+/* ── GRID (mulai index 1 — foto utama sudah di hero atas) ── */
+const grid = document.getElementById('photoGrid');
+PHOTOS.slice(1).forEach((photo) => {
+  const item = document.createElement('div');
+  item.className = 'g-item' + (photo.landscape ? ' landscape' : '');
+  if (photo.src) {
+    const img = document.createElement('img');
+    img.src = photo.src; img.alt = photo.caption;
+    item.appendChild(img);
+  } else {
+    item.innerHTML = `<div class="g-item-ph"><div class="gph-icon">📸</div><div class="gph-label">${photo.caption}</div></div>`;
+  }
+  const ov = document.createElement('div');
+  ov.className = 'g-overlay';
+  ov.innerHTML = `<div class="g-overlay-caption">${photo.caption}</div>
+    <div class="g-overlay-date">${fmtDate(photo.date)}</div>`;
+  item.appendChild(ov);
+  grid.appendChild(item);
+});
+
+/* ── LOVE RAIN ── */
+const canvas = document.getElementById('love-canvas');
+const ctx    = canvas.getContext('2d');
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas, { passive: true });
+
+const EMOJIS = ['❤️','💜','🩷','💕','💗','✨'];
+const MAX_DROPS = 28;
+const drops = [];
+function mkDrop(initY) {
+  return {
+    x:   Math.random() * canvas.width,
+    y:   initY != null ? initY : -20,
+    e:   EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
+    sz:  Math.random() * 12 + 7,
+    sp:  Math.random() * 0.6 + 0.25,
+    op:  Math.random() * 0.35 + 0.1,
+    dr:  (Math.random() - 0.5) * 0.25,
+    w:   Math.random() * Math.PI * 2,
+    ws:  Math.random() * 0.018 + 0.006,
+    rot: Math.random() * Math.PI * 2,
+    rs:  (Math.random() - 0.5) * 0.01,
+  };
+}
+for (let i = 0; i < MAX_DROPS; i++) drops.push(mkDrop(Math.random() * window.innerHeight));
+
+let rainTimer = 0;
+function rainLoop() {
+  rainTimer++;
+  if (rainTimer % 2 === 0) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = drops.length - 1; i >= 0; i--) {
+      const d = drops[i];
+      d.y += d.sp; d.x += d.dr + Math.sin(d.w) * 0.2;
+      d.w += d.ws; d.rot += d.rs;
+      if (d.y > canvas.height + 30) { drops[i] = mkDrop(); continue; }
+      ctx.save();
+      ctx.globalAlpha = d.op;
+      ctx.translate(d.x, d.y);
+      ctx.rotate(d.rot);
+      ctx.font = `${d.sz}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(d.e, 0, 0);
+      ctx.restore();
+    }
+  }
+  requestAnimationFrame(rainLoop);
+}
+requestAnimationFrame(rainLoop);
+
+/* ── POPUP + PASSWORD ── */
+const CORRECT_PASSWORD = '220909'; // ← ganti password di sini
+
+const popupOverlay = document.getElementById('popup-overlay');
+const popupEnter   = document.getElementById('popupEnter');
+const pwInput      = document.getElementById('pwInput');
+const pwError      = document.getElementById('pwError');
+const pwEye        = document.getElementById('pwEye');
+const bgMusic      = document.getElementById('bgMusic');
+const musicBtn     = document.getElementById('music-btn');
+const musicLabel   = document.getElementById('music-label');
+let isPlaying = false;
+
+// show/hide password
+pwEye.addEventListener('click', () => {
+  pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
+  pwEye.textContent = pwInput.type === 'password' ? '👁' : '🙈';
+});
+
+// enter key
+pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') popupEnter.click(); });
+
+function startMusic() {
+  bgMusic.volume = 0.4;
+  bgMusic.play().catch(() => {});
+  isPlaying = true;
+  musicBtn.innerHTML = '<div class="music-ripple"></div>⏸';
+  musicBtn.classList.add('playing');
+  musicLabel.textContent = '♪ sedang memutar...';
+}
+
+popupEnter.addEventListener('click', () => {
+  const val = pwInput.value.trim();
+  if (val === CORRECT_PASSWORD) {
+    pwError.classList.remove('show');
+    popupOverlay.classList.add('fade-out');
+    setTimeout(() => { popupOverlay.style.display = 'none'; }, 700);
+    startMusic();
+  } else {
+    pwError.classList.add('show');
+    pwInput.classList.add('shake');
+    pwInput.value = '';
+    setTimeout(() => pwInput.classList.remove('shake'), 450);
+  }
+});
+
+musicBtn.addEventListener('click', () => {
+  if (isPlaying) {
+    bgMusic.pause();
+    isPlaying = false;
+    musicBtn.innerHTML = '▶';
+    musicBtn.classList.remove('playing');
+    musicLabel.textContent = '♪ play musik';
+  } else {
+    startMusic();
+  }
+});
+</script>
+</body>
+</html>
